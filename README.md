@@ -4,6 +4,9 @@
 A minimal x86-64 operating system written in C/C++.
 
 ## Current Features
+
+<img width="816" height="616" alt="スクリーンショット 2026-01-12 0 51 56" src="https://github.com/user-attachments/assets/5eadb8a6-fc1c-4bce-9aec-7b5afdc2feae" />
+
 - Memory management is under development and not complete.
 
 - **UEFI Boot Loader** - Loads kernel ELF, prepares frame buffer and memory map

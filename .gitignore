@@ -4,3 +4,4 @@ mnt/
 disk.img
 *.elf
 *.o
+*.d

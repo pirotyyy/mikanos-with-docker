@@ -6,6 +6,7 @@
 #include "font.hpp"
 #include "frame_buffer_config.hpp"
 #include "graphics.hpp"
+#include "logger.hpp"
 #include "pci.hpp"
 
 void operator delete(void* obj) noexcept {}
@@ -70,6 +71,7 @@ extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
   console = new (console_buf)
       Console(*pixel_writer, kDesktopFGColor, kDesktopBGColor);
   printk("Welcome to MikanOS!\n");
+  SetLogLevel(kInfo);
 
   for (int dy = 0; dy < kMouseCursorHeight; ++dy) {
     for (int dx = 0; dx < kMouseCursorWidth; ++dx) {
@@ -82,14 +84,30 @@ extern "C" void KernelMain(const FrameBufferConfig& frame_buffer_config) {
   }
 
   auto err = pci::ScanAllBus();
-  printk("ScanAllBus: %s\n", err.Name());
+  Log(kDebug, "ScanAllBus: %s\n", err.Name());
 
   for (int i = 0; i < pci::num_device; ++i) {
     const auto& dev = pci::devices[i];
     auto vendor_id = pci::ReadVendorId(dev.bus, dev.device, dev.function);
     auto class_code = pci::ReadClassCode(dev.bus, dev.device, dev.function);
-    printk("%d.%d.%d: vend %04x, class %08x, head %02x\n", dev.bus, dev.device,
-           dev.function, vendor_id, class_code, dev.header_type);
+    Log(kDebug, "%d.%d.%d: vend %04x, class %08x, head %02x\n", dev.bus,
+        dev.device, dev.function, vendor_id, class_code, dev.header_type);
+  }
+
+  pci::Device* xhc_dev = nullptr;
+  for (int i = 0; i < pci::num_device; ++i) {
+    if (pci::devices[i].class_code.Match(0x0cu, 0x03u, 0x30u)) {
+      xhc_dev = &pci::devices[i];
+
+      if (0x8086 == pci::ReadVendorId(*xhc_dev)) {
+        break;
+      }
+    }
+  }
+
+  if (xhc_dev) {
+    Log(kInfo, "xHC has been found: %d,%d,%d\n", xhc_dev->bus, xhc_dev->device,
+        xhc_dev->function);
   }
 
   while (1)
